@@ -22,12 +22,11 @@ namespace ImageGallery.Client
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
         }
  
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // Add framework services.
             services.AddMvc();
 
+            //creating a new ploicy
             services.AddAuthorization(options => 
             {
                 options.AddPolicy(
@@ -37,14 +36,12 @@ namespace ImageGallery.Client
                         policyBuilder.RequireAuthenticatedUser();
                         policyBuilder.RequireClaim("country", "nl");
                         policyBuilder.RequireClaim("subscriptionlevel", "PayingUser");
+                        //policyBuilder.RequireRole();
                     });
             });
 
-            // register an IHttpContextAccessor so we can access the current
-            // HttpContext in services by injecting it
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
-            // register an IImageGalleryHttpClient
             services.AddScoped<IImageGalleryHttpClient, ImageGalleryHttpClient>();
 
             services.AddAuthentication(options =>
@@ -67,6 +64,8 @@ namespace ImageGallery.Client
                 options.Scope.Add("profile");
                 options.Scope.Add("address");
                 options.Scope.Add("roles");
+                options.Scope.Add("subscriptionlevel");
+                options.Scope.Add("country");
                 options.Scope.Add("imagegalleryapi");
                 options.SaveTokens = true;
                 options.ClientSecret = "secret";
@@ -88,7 +87,6 @@ namespace ImageGallery.Client
             });
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             if (env.IsDevelopment())

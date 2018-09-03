@@ -32,10 +32,9 @@ namespace ImageGallery.Client.Services
                 _httpClient.SetBearerToken(accessToken);
             }
 
-            _httpClient.BaseAddress = new Uri("https://localhost:44385/");
+            _httpClient.BaseAddress = new Uri("https://localhost:44385/"); //IG.API url
             _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.DefaultRequestHeaders.Accept.Add(
-                new MediaTypeWithQualityHeaderValue("application/json"));
+            _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             return _httpClient;
         }        

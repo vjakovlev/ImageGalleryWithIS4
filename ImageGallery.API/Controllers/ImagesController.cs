@@ -30,17 +30,16 @@ namespace ImageGallery.API.Controllers
         public IActionResult GetImages()
         {
             var ownerId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
-            // get from repo
+
             var imagesFromRepo = _galleryRepository.GetImages(ownerId);
 
-            // map to model
             var imagesToReturn = Mapper.Map<IEnumerable<Model.Image>>(imagesFromRepo);
 
-            // return
             return Ok(imagesToReturn);
         }
 
         [HttpGet("{id}", Name = "GetImage")]
+        [Authorize(Policy = "MustOwnImage")]
         public IActionResult GetImage(Guid id)
         {          
             var imageFromRepo = _galleryRepository.GetImage(id);
@@ -66,40 +65,24 @@ namespace ImageGallery.API.Controllers
 
             if (!ModelState.IsValid)
             {
-                // return 422 - Unprocessable Entity when validation fails
                 return new UnprocessableEntityObjectResult(ModelState);
             }
 
-            // Automapper maps only the Title in our configuration
             var imageEntity = Mapper.Map<Entities.Image>(imageForCreation);
 
-            // Create an image from the passed-in bytes (Base64), and 
-            // set the filename on the image
-
-            // get this environment's web root path (the path
-            // from which static content, like an image, is served)
             var webRootPath = _hostingEnvironment.WebRootPath;
 
-            // create the filename
             string fileName = Guid.NewGuid().ToString() + ".jpg";
             
-            // the full file path
             var filePath = Path.Combine($"{webRootPath}/images/{fileName}");
 
-            // write bytes and auto-close stream
             System.IO.File.WriteAllBytes(filePath, imageForCreation.Bytes);
 
-            // fill out the filename
             imageEntity.FileName = fileName;
-
-            // ownerId should be set - can't save image in starter solution, will
-            // be fixed during the course
-            //imageEntity.OwnerId = ...;
 
             var ownerId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
             imageEntity.OwnerId = ownerId;
 
-            // add and save.  
             _galleryRepository.AddImage(imageEntity);
 
             if (!_galleryRepository.Save())
@@ -115,6 +98,7 @@ namespace ImageGallery.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Policy = "MustOwnImage")]
         public IActionResult DeleteImage(Guid id)
         {
             
@@ -136,6 +120,7 @@ namespace ImageGallery.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Policy = "MustOwnImage")]
         public IActionResult UpdateImage(Guid id, 
             [FromBody] ImageForUpdate imageForUpdate)
         {
@@ -145,16 +130,8 @@ namespace ImageGallery.API.Controllers
                 return BadRequest();
             }
 
-            //var ownerId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
-
-            //if (!_galleryRepository.IsImageOwner(id, ownerId))
-            //{
-            //    return StatusCode(403);
-            //}
-
             if (!ModelState.IsValid)
             {
-                // return 422 - Unprocessable Entity when validation fails
                 return new UnprocessableEntityObjectResult(ModelState);
             }
 

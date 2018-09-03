@@ -30,7 +30,7 @@ namespace ImageGallery.Client.Controllers
         public async Task<IActionResult> Index()
         {
             await WriteOutIdentityInformation();
-            // call the API
+
             var httpClient = await _imageGalleryHttpClient.GetClient(); 
 
             var response = await httpClient.GetAsync("api/images").ConfigureAwait(false);
@@ -54,7 +54,6 @@ namespace ImageGallery.Client.Controllers
 
         public async Task<IActionResult> EditImage(Guid id)
         {
-            // call the API
             var httpClient = await _imageGalleryHttpClient.GetClient();
 
             var response = await httpClient.GetAsync($"api/images/{id}").ConfigureAwait(false);
@@ -143,7 +142,7 @@ namespace ImageGallery.Client.Controllers
             var imageForCreation = new ImageForCreation()
                 { Title = addImageViewModel.Title };
 
-            // take the first (only) file in the Files list
+            // take the first file in the Files list
             var imageFile = addImageViewModel.Files.First();
 
             if (imageFile.Length > 0)
@@ -175,7 +174,8 @@ namespace ImageGallery.Client.Controllers
             throw new Exception($"A problem happened while calling the API: {response.ReasonPhrase}");
         }
 
-        [Authorize(Roles = "PayingUser")]
+        //[Authorize(Roles = "PayingUser")]
+        [Authorize(Policy = "CanOrderFrame")]
         public async Task<IActionResult> OrderFrame()
         {
             var discorveryClient = new DiscoveryClient("https://localhost:44346/");
@@ -217,7 +217,6 @@ namespace ImageGallery.Client.Controllers
             await HttpContext.SignOutAsync("Cookies");
             await HttpContext.SignOutAsync("oidc");
         }
-
 
     }
 }

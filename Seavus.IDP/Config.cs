@@ -46,6 +46,23 @@ namespace Seavus.IDP
                         new Claim("subscriptionlevel", "PayingUser"),
                         new Claim("country", "nl")
                     }
+                },
+
+                new TestUser
+                {
+                    SubjectId = "a7539494-9ae7-43fe-81za-b4226e1kfaxb",
+                    Username = "Petar",
+                    Password = "password",
+
+                    Claims = new List<Claim>
+                    {
+                        new Claim("given_name", "Petar"),
+                        new Claim("family_name", "Petrovski"),
+                        new Claim("address", "Helsinki 16a"),
+                        new Claim("role", "PayingUser"),
+                        new Claim("subscriptionlevel", "PayingUser"),
+                        new Claim("country", "no")
+                    }
                 }
             };
         }

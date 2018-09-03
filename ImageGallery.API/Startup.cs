@@ -1,4 +1,5 @@
 ﻿using IdentityServer4.AccessTokenValidation;
+using ImageGallery.API.Authorization;
 using ImageGallery.API.Entities;
 using ImageGallery.API.Services;
 using Microsoft.AspNetCore.Builder;
@@ -8,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ImageGallery.API
 {
@@ -20,11 +22,23 @@ namespace ImageGallery.API
             Configuration = configuration;
         }
         
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit http://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-             services.AddMvc();
+            services.AddMvc();
+
+            services.AddAuthorization(options => 
+            {
+                options.AddPolicy(
+                    "MustOwnImage",
+                    policyBuilder =>
+                    {
+                        policyBuilder.RequireAuthenticatedUser();
+                        policyBuilder.AddRequirements(
+                            new MustOwnImageRequirement());
+                    });
+            });
+
+            services.AddScoped<IAuthorizationHandler, MustOwnImageHandler>();
 
             services.AddAuthentication(
                 IdentityServerAuthenticationDefaults.AuthenticationScheme)
@@ -33,18 +47,13 @@ namespace ImageGallery.API
                     options.Authority = "https://localhost:44346/";
                     options.ApiName = "imagegalleryapi";
                 });
-        
-            // register the DbContext on the container, getting the connection string from
-            // appSettings (note: use this during development; in a production environment,
-            // it's better to store the connection string in an environment variable)
+
             var connectionString = Configuration["ConnectionStrings:imageGalleryDBConnectionString"];
             services.AddDbContext<GalleryContext>(o => o.UseSqlServer(connectionString));
 
-            // register the repository
             services.AddScoped<IGalleryRepository, GalleryRepository>();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, 
             ILoggerFactory loggerFactory, GalleryContext galleryContext)
         {
@@ -58,7 +67,6 @@ namespace ImageGallery.API
                 {
                     appBuilder.Run(async context =>
                     {
-                        // ensure generic 500 status code on fault.
                         context.Response.StatusCode = 500;
                         await context.Response.WriteAsync("An unexpected fault happened. Try again later.");
                     });
@@ -71,18 +79,13 @@ namespace ImageGallery.API
 
             AutoMapper.Mapper.Initialize(cfg =>
             {
-                // Map from Image (entity) to Image, and back
                 cfg.CreateMap<Image, Model.Image>().ReverseMap();
 
-                // Map from ImageForCreation to Image
-                // Ignore properties that shouldn't be mapped
                 cfg.CreateMap<Model.ImageForCreation, Image>()
                     .ForMember(m => m.FileName, options => options.Ignore())
                     .ForMember(m => m.Id, options => options.Ignore())
                     .ForMember(m => m.OwnerId, options => options.Ignore());
 
-                // Map from ImageForUpdate to Image
-                // ignore properties that shouldn't be mapped
                 cfg.CreateMap<Model.ImageForUpdate, Image>()
                     .ForMember(m => m.FileName, options => options.Ignore())
                     .ForMember(m => m.Id, options => options.Ignore())
