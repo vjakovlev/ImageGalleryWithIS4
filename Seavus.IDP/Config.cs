@@ -93,7 +93,11 @@ namespace Seavus.IDP
         {
             return new List<ApiResource>
             {
-                new ApiResource("imagegalleryapi", "Image Gallery API", new List<string>() { "role" } )
+                new ApiResource("imagegalleryapi", "Image Gallery API",
+                new List<string>() { "role" } )
+                {
+                    ApiSecrets = { new Secret("apisecret".Sha256()) }
+                }
             };
         }
 
@@ -106,6 +110,14 @@ namespace Seavus.IDP
                     ClientName = "Image Gallery",
                     ClientId = "imagegalleryclient",
                     AllowedGrantTypes = GrantTypes.Hybrid,
+                    AccessTokenType = AccessTokenType.Reference,
+                    //IdentityTokenLifetime = 300,
+                    //AuthorizationCodeLifetime = 300,
+                    AccessTokenLifetime = 120,
+                    AllowOfflineAccess = true,
+                    //AbsoluteRefreshTokenLifetime = 2592000,
+                    //RefreshTokenExpiration = TokenExpiration.Absolute,
+                    UpdateAccessTokenClaimsOnRefresh = true,
                     RedirectUris = new List<string>()
                     {
                         "https://localhost:44361/signin-oidc"

@@ -46,6 +46,7 @@ namespace ImageGallery.API
                 {
                     options.Authority = "https://localhost:44346/";
                     options.ApiName = "imagegalleryapi";
+                    options.ApiSecret = "apisecret";
                 });
 
             var connectionString = Configuration["ConnectionStrings:imageGalleryDBConnectionString"];
